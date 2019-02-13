@@ -1,6 +1,7 @@
 FROM devspaces/bazel
 
 LABEL \
+    "com.trilogy.product"="Bazel" \
     "com.trilogy.company"="External" \
     "com.trilogy.stage"="dev" \
     "com.trilogy.maintainer.skype"="otaviocx" \
