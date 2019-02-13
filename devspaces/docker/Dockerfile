@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM phusion/baseimage:0.11
 
 ENV BAZEL_DIR=/data \
     BAZEL_BINARY=/bazeldist/output/bazel \
@@ -8,7 +8,7 @@ ENV BAZEL_DIR=/data \
 WORKDIR /bazeldist
 
 RUN apt-get update && \
-    apt-get install -y build-essential git python unzip wget zip && \
+    apt-get install -y build-essential git openjdk-8-jdk python unzip wget zip && \
     apt-get clean all && \
     # bazel is used to build bazel ...
     wget https://github.com/bazelbuild/bazel/releases/download/$BAZEL_LATEST_VERSION/bazel-$BAZEL_LATEST_VERSION-dist.zip -O bazel-dist.zip && \ 
