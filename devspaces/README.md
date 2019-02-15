@@ -34,32 +34,46 @@ Please, follow these steps to create a new DevSpace and build the Bazel project 
 
         devspaces exec Bazel
 
-### Bind the Repository Folder to the DevSpace
+### Build and Run Bazel
 
-To bind a folder to the created and started DevSpace, it is needed to follow the steps below:
+1. First, you need the source code inside the container. There are two approaches to get that: clone the repository inside the container (a) or bind the local repository with the container (b). 
 
-1. Make sure that the DevSpace is `Running` using the `devspaces ls` command.
+    a. To clone the repository inside the container you can run the following command:
 
-1. With a running DevSpace, move to the folder that you clonned the repository locally. If you are in the `devspaces`, just go back to the root folder:
+                git clone https://github.com/trilogy-group/bazel.git
 
-        cd ..
+    * If you want to clone the repository inside the `/data` folder you will need to firt clean it (**CAUTION: if it is bonded, the files in local environment will be deleted too**):
 
-1. Run the following command to bind the current folder:
+                cd /data
+                rm -rf .*
+                rm -rf *
+                git clone https://github.com/trilogy-group/bazel.git .
 
-        devspaces bind Bazel
+    b. To bind a folder to the created and started DevSpace, it is needed to follow the steps below:
 
-1. Wait to get all files synced. To see if the sync is finished, open a browser and access http://localhost:49152/. You will see a page like the one below. If the sync is finished, you will see the **Up to date** green message next to the **Remote Device** block (see the [demo]() to get details about that).
+    * Make sure that the DevSpace is `Running` using the `devspaces ls` command.
+    * With a running DevSpace, move to the root folder of the repository in the local machine.
+    * Run the below command to bind the current folder:
 
-   * Now, everything that is changed or created inside the local folder or in the `/data` folder inside the container will be synced. The sync is bidirectional. 
+                devspaces bind Bazel
 
-   * If you want to stop the bind, just move to the bonded folder and run the command:
+    * Wait to get all files synced. To see if the sync is finished, open a browser and access http://localhost:49152/. You will see a page like the one below. If the sync is finished, you will see the **Up to date** green message next to the **Remote Device** block.
+    * When you get the sync up to date, everything that is changed, deleted or created inside the local folder or in the `/data` folder inside the container will be synced. The sync is bidirectional. 
+    * **Note:** If you want to stop the bind, just move to the bonded folder and run the command:
 
                 devspaces unbind Bazel
 
-### Build and Run Bazel
+1. To run a build inside the DevSpaces, just run the following command inside the repository folder:
 
-1. To run a build inside the DevSpaces, just run the following command inside the `build` folder:
+        bazel build //src:bazel
 
-        ant dist
+    * After the build the resulting binary can be found at `bazel-bin/src/bazel`.
 
-* **Important Note:** Bazel is a Desktop application that uses the GUI of the operational system. DF DevSpaces doesn't support the usage of X11 Server. So, it is not possible to run the built project inside the container. However, after the build, it shows a message with the path to the installer. You can run in the local environment if you want (see the [demo]() to get details about that).
+1. Bazel is a build system. Thus, to run it, we need a project that needs to be built. Fortunately, there are some examples in the [bazelbuild/examples](https://github.com/bazelbuild/examples) repository. So, the first thing we need to do is to clone this repository in a place that we want:
+
+        git clone https://github.com/bazelbuild/examples.git
+
+1. There are some examples inside this repository. For this README, we will try `java-maven`. Therefore, go to the `java-maven` folder and run the built bazel to build this project:
+
+        cd java-maven
+        /data/bazel-bin/src/bazel build :java-maven
