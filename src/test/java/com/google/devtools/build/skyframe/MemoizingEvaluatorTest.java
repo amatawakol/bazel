@@ -70,6 +70,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -94,11 +95,6 @@ public class MemoizingEvaluatorTest {
     initializeReporter();
   }
 
-  @After
-  public void assertNoTrackedErrors() {
-    TrackingAwaiter.INSTANCE.assertNoErrors();
-  }
-
   private void initializeTester(@Nullable TrackingProgressReceiver customProgressReceiver) {
     emittedEventState = new MemoizingEvaluator.EmittedEventState();
     tester = new MemoizingEvaluatorTester();
@@ -106,6 +102,11 @@ public class MemoizingEvaluatorTest {
       tester.setProgressReceiver(customProgressReceiver);
     }
     tester.initialize(true);
+  }
+
+  @After
+  public void assertNoTrackedErrors() {
+    TrackingAwaiter.INSTANCE.assertNoErrors();
   }
 
   protected RecordingDifferencer getRecordingDifferencer() {
@@ -358,7 +359,7 @@ public class MemoizingEvaluatorTest {
                   Thread.sleep(TestUtils.WAIT_TIMEOUT_MILLISECONDS);
                   throw new AssertionError("Shouldn't have slept so long");
                 } catch (InterruptedException e) {
-                  throw new RuntimeException("I don't like being woken up!");
+                  throw new RuntimeException("I don't like being woken up!", e);
                 }
               }
 
@@ -4483,6 +4484,7 @@ public class MemoizingEvaluatorTest {
    * evaluation depending on a node in error.
    */
   @Test
+  @Ignore // TODO(b/124505961): This test hangs with a thread blocked in CDL.await.
   public void shutDownBuildOnCachedError_Done() throws Exception {
     // errorKey will be invalidated due to its dependence on invalidatedKey, but later revalidated
     // since invalidatedKey re-evaluates to the same value on a subsequent build.

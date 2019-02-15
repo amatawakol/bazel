@@ -293,10 +293,6 @@ public abstract class SkyframeExecutor implements WalkableGraphFactory {
   protected SkyframeProgressReceiver progressReceiver;
   private final AtomicReference<CyclesReporter> cyclesReporter = new AtomicReference<>();
 
-  protected int modifiedFiles;
-  protected int outputDirtyFiles;
-  protected int modifiedFilesDuringPreviousBuild;
-
   @VisibleForTesting boolean lastAnalysisDiscarded = false;
 
   private boolean analysisCacheDiscarded = false;
@@ -601,7 +597,7 @@ public abstract class SkyframeExecutor implements WalkableGraphFactory {
   }
 
   protected SkyFunction newDirectoryListingStateFunction() {
-    return new DirectoryListingStateFunction(externalFilesHelper);
+    return new DirectoryListingStateFunction(externalFilesHelper, syscalls);
   }
 
   protected SkyFunction newGlobFunction() {
@@ -1169,16 +1165,6 @@ public abstract class SkyframeExecutor implements WalkableGraphFactory {
   public SkyFunctionEnvironmentForTesting getSkyFunctionEnvironmentForTesting(
       ExtendedEventHandler eventHandler) {
     return new SkyFunctionEnvironmentForTesting(eventHandler, this);
-  }
-
-  /**
-   * Informs user about number of modified files (source and output files).
-   */
-  // Note, that number of modified files in some cases can be bigger than actual number of
-  // modified files for targets in current request. Skyframe may check for modification all files
-  // from previous requests.
-  protected void informAboutNumberOfModifiedFiles() {
-    logger.info(String.format("Found %d modified files from last build", modifiedFiles));
   }
 
   public EventBus getEventBus() {
@@ -2120,6 +2106,11 @@ public abstract class SkyframeExecutor implements WalkableGraphFactory {
     invalidateFilesUnderPathForTestingImpl(eventHandler, modifiedFileSet, pathEntry);
   }
 
+  @VisibleForTesting
+  public final void turnOffSyscallCacheForTesting() {
+    syscalls.set(UnixGlob.DEFAULT_SYSCALLS);
+  }
+
   protected abstract void invalidateFilesUnderPathForTestingImpl(
       ExtendedEventHandler eventHandler, ModifiedFileSet modifiedFileSet, Root pathEntry)
       throws InterruptedException;
@@ -2691,17 +2682,7 @@ public abstract class SkyframeExecutor implements WalkableGraphFactory {
     }
   }
 
-  public int getOutputDirtyFilesAndClear() {
-    int result = outputDirtyFiles;
-    outputDirtyFiles = 0;
-    return result;
-  }
-
-  public int getModifiedFilesDuringPreviousBuildAndClear() {
-    int result = modifiedFilesDuringPreviousBuild;
-    modifiedFilesDuringPreviousBuild = 0;
-    return result;
-  }
+  public abstract ExecutionFinishedEvent createExecutionFinishedEvent();
 
   private <T extends SkyValue> EvaluationResult<T> evaluate(
       Iterable<? extends SkyKey> roots,

@@ -33,6 +33,7 @@ import com.google.devtools.build.lib.analysis.RuleContext;
 import com.google.devtools.build.lib.analysis.RuleDefinitionEnvironment;
 import com.google.devtools.build.lib.analysis.config.HostTransition;
 import com.google.devtools.build.lib.analysis.configuredtargets.RuleConfiguredTarget;
+import com.google.devtools.build.lib.analysis.platform.ToolchainInfo;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.collect.nestedset.NestedSet;
 import com.google.devtools.build.lib.collect.nestedset.NestedSetBuilder;
@@ -63,9 +64,7 @@ import javax.annotation.Nullable;
 public class JavaProtoAspect extends NativeAspectClass implements ConfiguredAspectFactory {
 
   private final Label hostJdkAttribute;
-  private final Label javaRuntimeToolchainType;
   private final Label javaToolchainAttribute;
-  private final Label javaToolchainType;
 
   private static LabelLateBoundDefault<?> getSpeedProtoToolchainLabel(String defaultValue) {
     return LabelLateBoundDefault.fromTargetConfiguration(
@@ -92,9 +91,7 @@ public class JavaProtoAspect extends NativeAspectClass implements ConfiguredAspe
     this.defaultSpeedProtoToolchainLabel =
         Preconditions.checkNotNull(defaultSpeedProtoToolchainLabel);
     this.hostJdkAttribute = JavaSemantics.hostJdkAttribute(env);
-    this.javaRuntimeToolchainType = JavaRuleClasses.javaRuntimeTypeAttribute(env);
     this.javaToolchainAttribute = JavaSemantics.javaToolchainAttribute(env);
-    this.javaToolchainType = JavaRuleClasses.javaToolchainTypeAttribute(env);
   }
 
   @Override
@@ -113,8 +110,7 @@ public class JavaProtoAspect extends NativeAspectClass implements ConfiguredAspe
     ProtoInfo protoInfo = ctadBase.getConfiguredTarget().get(ProtoInfo.PROVIDER);
 
     JavaProtoAspectCommon aspectCommon =
-        JavaProtoAspectCommon.getSpeedInstance(
-            ruleContext, javaSemantics, rpcSupport, javaToolchainType, javaRuntimeToolchainType);
+        JavaProtoAspectCommon.getSpeedInstance(ruleContext, javaSemantics, rpcSupport);
     Impl impl = new Impl(ruleContext, protoInfo, aspectCommon, rpcSupport);
     impl.addProviders(aspect);
     return aspect.build();
@@ -140,13 +136,13 @@ public class JavaProtoAspect extends NativeAspectClass implements ConfiguredAspe
             .add(
                 attr(HOST_JAVA_RUNTIME_ATTRIBUTE_NAME, LABEL)
                     .cfg(HostTransition.INSTANCE)
-                    .value(hostJdkAttribute))
+                    .value(hostJdkAttribute)
+                    .mandatoryProviders(ToolchainInfo.PROVIDER.id()))
             .add(
                 attr(JavaRuleClasses.JAVA_TOOLCHAIN_ATTRIBUTE_NAME, LABEL)
                     .useOutputLicenses()
-                    .allowedRuleClasses("java_toolchain")
-                    .value(javaToolchainAttribute))
-            .addRequiredToolchains(javaRuntimeToolchainType, javaToolchainType);
+                    .value(javaToolchainAttribute)
+                    .mandatoryProviders(ToolchainInfo.PROVIDER.id()));
 
     rpcSupport.mutateAspectDefinition(result, aspectParameters);
 
