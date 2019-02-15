@@ -8,4 +8,6 @@ LABEL \
     "com.trilogy.maintainer.email"="otaviocalaca.xavier@aurea.com" \
     "description"="This file generates a docker image containing Open JDK 8, Bazel and tools needed to build Bazel project"
 
+ENV PATH=$PATH:/bazeldist/output
+
 WORKDIR /data
