@@ -19,3 +19,8 @@
 # Ignore jekyll build output.
 /production
 /.sass-cache
+
+# DevSpaces
+.stversions
+.stignore
+.stfolder
